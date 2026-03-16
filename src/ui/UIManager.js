@@ -177,8 +177,10 @@ export class UIManager {
         // Shadow Toggle logic
         const shadowToggle = document.getElementById('prop-shadow-toggle');
         const shadowGroup = document.getElementById('group-shadow-settings');
+        const shadowOpacity = document.getElementById('prop-shadow-opacity');
         const shadowBlur = document.getElementById('prop-shadow-blur');
         const shadowOffset = document.getElementById('prop-shadow-offset');
+        const shadowAngle = document.getElementById('prop-shadow-angle');
         
         const updateShadow = () => {
             const objs = this.canvasManager.canvas.getActiveObjects();
@@ -186,14 +188,22 @@ export class UIManager {
             
             if (shadowToggle.checked) {
                 shadowGroup.style.display = 'block';
+                const opacity = parseFloat(shadowOpacity.value);
                 const blur = parseInt(shadowBlur.value);
-                const offset = parseInt(shadowOffset.value);
+                const distance = parseInt(shadowOffset.value);
+                const angle = parseInt(shadowAngle.value);
+                
+                // Trigonometry to convert angle and distance to X/Y offset
+                const radians = angle * (Math.PI / 180);
+                const offsetX = Math.round(distance * Math.cos(radians));
+                const offsetY = Math.round(distance * Math.sin(radians));
+                
                 objs.forEach(obj => {
                     obj.set('shadow', new fabric.Shadow({
-                        color: 'rgba(0,0,0,0.5)',
+                        color: `rgba(0,0,0,${opacity})`,
                         blur: blur,
-                        offsetX: offset,
-                        offsetY: offset
+                        offsetX: offsetX,
+                        offsetY: offsetY
                     }));
                 });
             } else {
@@ -205,8 +215,10 @@ export class UIManager {
         };
 
         if (shadowToggle) shadowToggle.addEventListener('change', updateShadow);
+        if (shadowOpacity) shadowOpacity.addEventListener('input', updateShadow);
         if (shadowBlur) shadowBlur.addEventListener('input', updateShadow);
         if (shadowOffset) shadowOffset.addEventListener('input', updateShadow);
+        if (shadowAngle) shadowAngle.addEventListener('input', updateShadow);
     }
     
     updatePropertiesPanel(activeObjects) {
@@ -218,8 +230,10 @@ export class UIManager {
         const fontSelect = document.getElementById('prop-font');
         const shadowToggle = document.getElementById('prop-shadow-toggle');
         const shadowGroup = document.getElementById('group-shadow-settings');
+        const shadowOpacity = document.getElementById('prop-shadow-opacity');
         const shadowBlur = document.getElementById('prop-shadow-blur');
         const shadowOffset = document.getElementById('prop-shadow-offset');
+        const shadowAngle = document.getElementById('prop-shadow-angle');
         
         if (!activeObjects || activeObjects.length === 0) {
             emptyState.style.display = 'block';
@@ -257,8 +271,26 @@ export class UIManager {
                 if (obj.shadow) {
                     shadowToggle.checked = true;
                     shadowGroup.style.display = 'block';
+                    
+                    // Extract opacity from rgba string or use default
+                    let opacity = 0.5;
+                    if (obj.shadow.color && obj.shadow.color.includes('rgba')) {
+                        const match = obj.shadow.color.match(/[\d.]+\)$/);
+                        if (match) opacity = parseFloat(match[0]);
+                    }
+                    
+                    // Reverse trigonometry to find distance and angle from offsetX/Y
+                    const ox = obj.shadow.offsetX || 0;
+                    const oy = obj.shadow.offsetY || 0;
+                    const distance = Math.round(Math.sqrt(ox*ox + oy*oy));
+                    
+                    let angle = Math.round(Math.atan2(oy, ox) * (180 / Math.PI));
+                    if (angle < 0) angle += 360;
+                    
+                    if (shadowOpacity) shadowOpacity.value = opacity;
                     if (shadowBlur) shadowBlur.value = obj.shadow.blur || 10;
-                    if (shadowOffset) shadowOffset.value = obj.shadow.offsetX || 5;
+                    if (shadowOffset) shadowOffset.value = distance || 5;
+                    if (shadowAngle) shadowAngle.value = angle || 45;
                 } else {
                     shadowToggle.checked = false;
                     shadowGroup.style.display = 'none';
@@ -332,11 +364,13 @@ export class UIManager {
                         this.applyAnimation(obj, animType);
                     });
                     
-                    // Force timeline update and autoplay to preview
+                    // Force timeline update and rebuild deterministic GSAP timeline
                     this.timelineManager.renderTracks();
                     
                     // Reset global timeline to start from 0
-                    gsap.globalTimeline.time(0);
+                    if (this.timelineManager.masterTimeline) {
+                        this.timelineManager.masterTimeline.time(0);
+                    }
                     if (!this.timelineManager.isPlaying) {
                         this.timelineManager.togglePlay();
                     }
@@ -346,57 +380,17 @@ export class UIManager {
     }
 
     applyAnimation(obj, type) {
-        // Simple GSAP setup interacting with FabricJS
-        // Add animation metadata to object for the timeline to read 
+        // Data-driven animation injection
         if (!obj.animations) obj.animations = [];
-        obj.animations.push({ type: type, start: 0, duration: 1 });
         
-        // GSAP to animate Fabric.js object properties
-        // By using an onUpdate wrapper, GSAP can drive fabric objects.
-        const duration = 1; // 1 second
+        // Build metadata config (Start 0, duration 1. Out animations start later)
+        let config = { type: type, start: 0, duration: 1 };
+        if (type.includes('-out')) config.start = this.timelineManager.duration - 1.5;
         
-        // Default target properties
-        let vars = { duration: duration, ease: "power2.out", onUpdate: () => this.canvasManager.canvas.requestRenderAll() };
+        obj.animations.push(config);
         
-        // Using fromTo allows us to maintain the real base state natively,
-        // so clicking play again reloops cleanly without leaving permanent GSAP artifacts.
-        switch(type) {
-            case 'fade-in':
-                gsap.fromTo(obj, { opacity: 0 }, { opacity: 1, ...vars });
-                break;
-            case 'slide-in':
-                const originalY = obj.top;
-                gsap.fromTo(obj, { opacity: 0, top: originalY + 100 }, { opacity: 1, top: originalY, ...vars });
-                break;
-            case 'scale-in':
-                const origScaleX = obj.scaleX || 1;
-                const origScaleY = obj.scaleY || 1;
-                vars.ease = "back.out(1.7)";
-                gsap.fromTo(obj, { scaleX: 0, scaleY: 0, opacity: 0 }, { scaleX: origScaleX, scaleY: origScaleY, opacity: 1, ...vars });
-                break;
-            case 'fade-out':
-                gsap.fromTo(obj, { opacity: 1 }, { opacity: 0, delay: 3, ...vars });
-                break;
-            case 'slide-out':
-                const origYOut = obj.top;
-                gsap.fromTo(obj, { top: origYOut, opacity: 1 }, { top: origYOut + 100, opacity: 0, delay: 3, ...vars });
-                break;
-            case 'pulse':
-                const currentScale = obj.scaleX || 1;
-                vars.yoyo = true;
-                vars.repeat = 3;
-                vars.ease = "power1.inOut";
-                gsap.fromTo(obj, { scaleX: currentScale, scaleY: currentScale }, { scaleX: currentScale * 1.2, scaleY: currentScale * 1.2, ...vars });
-                break;
-            case 'bounce':
-                const originalTop = obj.top;
-                vars.ease = "bounce.out";
-                gsap.fromTo(obj, { top: originalTop - 150 }, { top: originalTop, ...vars });
-                break;
-            case 'rotate':
-                const origAngle = obj.angle || 0;
-                gsap.fromTo(obj, { angle: origAngle }, { angle: origAngle + 360, ...vars });
-                break;
-        }
+        // The TimelineManager now deterministically builds the actual GSAP commands.
+        this.timelineManager.rebuildTimeline();
+        this.canvasManager.saveHistory();
     }
 }

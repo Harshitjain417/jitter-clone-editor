@@ -111,6 +111,7 @@
 
 input[type="color"] {
   -webkit-appearance: none;
+  appearance: none;
   border: none;
   width: 32px;
   height: 32px;
@@ -155,4 +156,56 @@ input[type="color"]::-webkit-color-swatch {
 .preset-btn:hover {
   background-color: var(--bg-hover);
   border-color: var(--accent-primary);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.progress-bar-bg {
+  height: 8px;
+  background-color: var(--bg-dark);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  width: 0%;
+  transition: width 0.3s ease;
 }

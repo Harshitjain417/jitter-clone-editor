@@ -39,6 +39,18 @@ export class CanvasManager {
         this.canvas.on('object:added', () => this.saveHistory());
         this.canvas.on('object:modified', () => this.saveHistory());
         this.canvas.on('object:removed', () => this.saveHistory());
+        
+        // Canvas Zoom on scroll
+        this.canvas.on('mouse:wheel', (opt) => {
+            const delta = opt.e.deltaY;
+            let zoom = this.canvas.getZoom();
+            zoom *= 0.999 ** delta;
+            if (zoom > 20) zoom = 20;
+            if (zoom < 0.1) zoom = 0.1;
+            this.canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+            opt.e.preventDefault();
+            opt.e.stopPropagation();
+        });
 
         window.addEventListener('resize', this.resize.bind(this));
         this.resize(); // Initial resize to fit viewport

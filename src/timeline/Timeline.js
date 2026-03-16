@@ -12,6 +12,10 @@ export class TimelineManager {
         this.currentTime = 0; // in seconds
         this.duration = 5; // Total duration in seconds
         
+        if (window.gsap) {
+            this.masterTimeline = gsap.timeline({ paused: true });
+        }
+        
         // This is a placeholder for the timeline logic
         this.setupListeners();
         this.renderTracks();
@@ -54,25 +58,27 @@ export class TimelineManager {
     }
     
     startPlayback() {
+        if (!window.gsap || !this.masterTimeline) return;
+        
         // If at the end, restart
         if (this.currentTime >= this.duration) {
             this.currentTime = 0;
-            if (window.gsap) gsap.globalTimeline.time(0);
+            this.masterTimeline.time(0);
         }
-        if (window.gsap) gsap.globalTimeline.play();
+        this.masterTimeline.play();
         this.updatePlayhead();
     }
     
     stopPlayback() {
-        if (window.gsap) gsap.globalTimeline.pause();
+        if (window.gsap && this.masterTimeline) {
+            this.masterTimeline.pause();
+        }
     }
     
     updatePlayhead() {
-        if (!this.isPlaying) return;
+        if (!this.isPlaying || !this.masterTimeline) return;
         
-        if (window.gsap) {
-            this.currentTime = gsap.globalTimeline.time();
-        }
+        this.currentTime = this.masterTimeline.time();
         
         // Update display
         const minutes = Math.floor(this.currentTime / 60);
@@ -131,23 +137,92 @@ export class TimelineManager {
             track.style.position = 'relative';
             track.textContent = obj.name || 'Object';
             
-            // An animation block could go here visually
-            const block = document.createElement('div');
-            block.style.position = 'absolute';
-            block.style.left = '20%';
-            block.style.top = '6px';
-            block.style.height = '20px';
-            block.style.width = '30%';
-            block.style.backgroundColor = 'var(--accent-glow)';
-            block.style.border = '1px solid var(--accent-primary)';
-            block.style.borderRadius = '4px';
-            
-            // Only add block if the object has animations attached (via custom properties)
+            // Render animation blocks
             if (obj.animations && obj.animations.length > 0) {
-                 track.appendChild(block);
+                 obj.animations.forEach((anim) => {
+                     const block = document.createElement('div');
+                     block.style.position = 'absolute';
+                     
+                     // Convert timeline coordinates
+                     const leftPercent = (anim.start / this.duration) * 100;
+                     const widthPercent = (anim.duration / this.duration) * 100;
+                     
+                     block.style.left = `${leftPercent}%`;
+                     block.style.top = '6px';
+                     block.style.height = '20px';
+                     block.style.width = `${widthPercent}%`;
+                     block.style.backgroundColor = 'var(--accent-glow)';
+                     block.style.border = '1px solid var(--accent-primary)';
+                     block.style.borderRadius = '4px';
+                     block.title = `${anim.type}`;
+                     
+                     track.appendChild(block);
+                 });
             }
             
             this.tracksContainer.appendChild(track);
         });
+        
+        this.rebuildTimeline();
+    }
+    
+    rebuildTimeline() {
+        if (!window.gsap || !this.masterTimeline) return;
+        
+        // Reset base properties from fabric to strip GSAP overrides
+        this.masterTimeline.clear();
+        
+        const objects = this.canvasManager.canvas.getObjects();
+        objects.forEach(obj => {
+            if (!obj.animations || obj.animations.length === 0) return;
+            
+            // Queue animations onto master timeline positionally
+            obj.animations.forEach(anim => {
+                const duration = anim.duration || 1;
+                let vars = { duration: duration, ease: "power2.out", onUpdate: () => this.canvasManager.canvas.requestRenderAll() };
+                
+                switch(anim.type) {
+                    case 'fade-in':
+                        this.masterTimeline.fromTo(obj, { opacity: 0 }, { opacity: 1, ...vars }, anim.start);
+                        break;
+                    case 'slide-in':
+                        const originalY = obj.top || 0;
+                        this.masterTimeline.fromTo(obj, { opacity: 0, top: originalY + 100 }, { opacity: 1, top: originalY, ...vars }, anim.start);
+                        break;
+                    case 'scale-in':
+                        const origScaleX = obj.scaleX || 1;
+                        const origScaleY = obj.scaleY || 1;
+                        vars.ease = "back.out(1.7)";
+                        this.masterTimeline.fromTo(obj, { scaleX: 0, scaleY: 0, opacity: 0 }, { scaleX: origScaleX, scaleY: origScaleY, opacity: 1, ...vars }, anim.start);
+                        break;
+                    case 'fade-out':
+                        this.masterTimeline.fromTo(obj, { opacity: 1 }, { opacity: 0, ...vars }, anim.start);
+                        break;
+                    case 'slide-out':
+                        const origYOut = obj.top || 0;
+                        this.masterTimeline.fromTo(obj, { top: origYOut, opacity: 1 }, { top: origYOut + 100, opacity: 0, ...vars }, anim.start);
+                        break;
+                    case 'pulse':
+                        const currentScale = obj.scaleX || 1;
+                        vars.yoyo = true;
+                        vars.repeat = 3;
+                        vars.ease = "power1.inOut";
+                        this.masterTimeline.fromTo(obj, { scaleX: currentScale, scaleY: currentScale }, { scaleX: currentScale * 1.2, scaleY: currentScale * 1.2, ...vars }, anim.start);
+                        break;
+                    case 'bounce':
+                        const originalTop = obj.top || 0;
+                        vars.ease = "bounce.out";
+                        this.masterTimeline.fromTo(obj, { top: originalTop - 150 }, { top: originalTop, ...vars }, anim.start);
+                        break;
+                    case 'rotate':
+                        const origAngle = obj.angle || 0;
+                        this.masterTimeline.fromTo(obj, { angle: origAngle }, { angle: origAngle + 360, ...vars }, anim.start);
+                        break;
+                }
+            });
+        });
+        
+        // Scrub back to current time after rebuild
+        this.masterTimeline.time(this.currentTime);
     }
 }

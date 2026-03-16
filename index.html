@@ -93,12 +93,20 @@
                 </div>
                 <div id="group-shadow-settings" style="display: none; padding-left: 10px;">
                   <div class="prop-group mt-2">
+                    <label>Opacity</label>
+                    <input type="range" id="prop-shadow-opacity" min="0" max="1" step="0.05" value="0.5" style="width: 80px;">
+                  </div>
+                  <div class="prop-group mt-2">
                     <label>Blur</label>
                     <input type="range" id="prop-shadow-blur" min="0" max="50" step="1" value="10" style="width: 80px;">
                   </div>
                   <div class="prop-group mt-2">
-                    <label>Offset</label>
-                    <input type="range" id="prop-shadow-offset" min="-20" max="20" step="1" value="5" style="width: 80px;">
+                    <label>Dist.</label>
+                    <input type="range" id="prop-shadow-offset" min="0" max="50" step="1" value="5" style="width: 80px;">
+                  </div>
+                  <div class="prop-group mt-2">
+                    <label>Angle</label>
+                    <input type="range" id="prop-shadow-angle" min="0" max="360" step="1" value="45" style="width: 80px;">
                   </div>
                 </div>
               </div>
@@ -162,6 +170,39 @@
           <div class="playhead" id="playhead"></div>
         </div>
       </footer>
+      
+      <!-- Export Modal Overlay -->
+      <div id="export-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Export Video</h3>
+            <button class="tool-btn" id="btn-close-modal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div class="modal-body">
+            <div class="prop-group">
+              <label>Format</label>
+              <select id="export-format" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-light); padding: 8px; border-radius: 4px; width: 150px;">
+                <option value="mp4">MP4 Video (H.264)</option>
+                <option value="webm">WebM Video</option>
+              </select>
+            </div>
+            
+            <div id="export-progress-container" style="display: none; margin-top: 20px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                <span>Rendering...</span>
+                <span id="export-percentage">0%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="export-progress-fill"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer" style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="btn btn-secondary" id="btn-cancel-export">Cancel</button>
+            <button class="btn btn-primary" id="btn-start-export">Start Render</button>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
