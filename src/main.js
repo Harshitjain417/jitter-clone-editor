@@ -42,7 +42,9 @@ class App {
         // Prevent shortcuts if typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         
-        switch(e.key.toLowerCase()) {
+        // Key bindings
+        const key = e.key.toLowerCase();
+        switch(key) {
             case 'backspace':
             case 'delete':
                 this.canvasManager.deleteSelected();

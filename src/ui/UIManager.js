@@ -62,6 +62,9 @@ export class UIManager {
         
         // Properties manual input
         const colorPicker = document.getElementById('prop-fill');
+        const scaleSlider = document.getElementById('prop-scale');
+        const fontSelect = document.getElementById('prop-font');
+        
         if (colorPicker) {
             colorPicker.addEventListener('input', (e) => {
                 const objs = this.canvasManager.canvas.getActiveObjects();
@@ -70,13 +73,70 @@ export class UIManager {
                     this.canvasManager.canvas.requestRenderAll();
                 }
             });
+            // Finalize history state once dragging color is done
+            colorPicker.addEventListener('change', () => this.canvasManager.saveHistory());
         }
+        
+        if (scaleSlider) {
+            scaleSlider.addEventListener('input', (e) => {
+                const objs = this.canvasManager.canvas.getActiveObjects();
+                if (objs.length) {
+                    const val = parseFloat(e.target.value);
+                    objs.forEach(obj => {
+                        obj.set('scaleX', val);
+                        obj.set('scaleY', val);
+                    });
+                    this.canvasManager.canvas.requestRenderAll();
+                }
+            });
+            scaleSlider.addEventListener('change', () => this.canvasManager.saveHistory());
+        }
+        
+        if (fontSelect) {
+            fontSelect.addEventListener('change', (e) => {
+                const objs = this.canvasManager.canvas.getActiveObjects();
+                if (objs.length) {
+                    objs.forEach(obj => {
+                        if (obj.type === 'i-text' || obj.type === 'text') {
+                            obj.set('fontFamily', e.target.value);
+                        }
+                    });
+                    this.canvasManager.canvas.requestRenderAll();
+                    this.canvasManager.saveHistory();
+                }
+            });
+        }
+        
+        // Alignment Buttons
+        document.getElementById('btn-align-c')?.addEventListener('click', () => {
+            const objs = this.canvasManager.canvas.getActiveObjects();
+            objs.forEach(obj => this.canvasManager.canvas.centerObject(obj));
+            this.canvasManager.canvas.requestRenderAll();
+            this.canvasManager.saveHistory();
+        });
+        
+        document.getElementById('btn-align-h')?.addEventListener('click', () => {
+            const objs = this.canvasManager.canvas.getActiveObjects();
+            objs.forEach(obj => this.canvasManager.canvas.centerObjectH(obj));
+            this.canvasManager.canvas.requestRenderAll();
+            this.canvasManager.saveHistory();
+        });
+        
+        document.getElementById('btn-align-v')?.addEventListener('click', () => {
+            const objs = this.canvasManager.canvas.getActiveObjects();
+            objs.forEach(obj => this.canvasManager.canvas.centerObjectV(obj));
+            this.canvasManager.canvas.requestRenderAll();
+            this.canvasManager.saveHistory();
+        });
     }
     
     updatePropertiesPanel(activeObjects) {
         const content = document.getElementById('properties-content');
         const emptyState = this.propertyPanel.querySelector('.empty-state');
         const colorPicker = document.getElementById('prop-fill');
+        const scaleSlider = document.getElementById('prop-scale');
+        const fontGroup = document.getElementById('group-font');
+        const fontSelect = document.getElementById('prop-font');
         
         if (!activeObjects || activeObjects.length === 0) {
             emptyState.style.display = 'block';
@@ -91,6 +151,21 @@ export class UIManager {
                 // Fabric returns rgb() or hex differently, robust conversion skipped for MVP
                 if (obj.fill.startsWith('#')) {
                     colorPicker.value = obj.fill;
+                }
+            }
+            if (scaleSlider && obj.scaleX) {
+                scaleSlider.value = obj.scaleX;
+            }
+            
+            // Show Font dropdown only if text is selected
+            if (fontGroup) {
+                if (obj.type === 'i-text' || obj.type === 'text') {
+                    fontGroup.style.display = 'flex';
+                    if (fontSelect && obj.fontFamily) {
+                        fontSelect.value = obj.fontFamily;
+                    }
+                } else {
+                    fontGroup.style.display = 'none';
                 }
             }
         }
@@ -141,6 +216,8 @@ export class UIManager {
             div.addEventListener('click', () => {
                 this.canvasManager.canvas.setActiveObject(obj);
                 this.canvasManager.canvas.requestRenderAll();
+                // Manually fire the selection event to update properties
+                this.canvasManager.handleSelectionChange(); 
             });
             
             this.layerList.appendChild(div);
@@ -220,6 +297,31 @@ export class UIManager {
                 vars.top = obj.top + 100;
                 vars.opacity = 0;
                 vars.delay = 3;
+                gsap.to(obj, vars);
+                break;
+            case 'pulse':
+                const currentScale = obj.scaleX || 1;
+                vars.scaleX = currentScale * 1.2;
+                vars.scaleY = currentScale * 1.2;
+                vars.yoyo = true;
+                vars.repeat = 3;
+                vars.ease = "power1.inOut";
+                // Add a completion callback to reset
+                vars.onComplete = () => {
+                    obj.set({ scaleX: currentScale, scaleY: currentScale });
+                    this.canvasManager.canvas.requestRenderAll();
+                };
+                gsap.to(obj, vars);
+                break;
+            case 'bounce':
+                const originalTop = obj.top;
+                obj.set({ top: originalTop - 150 });
+                vars.top = originalTop;
+                vars.ease = "bounce.out";
+                gsap.to(obj, vars);
+                break;
+            case 'rotate':
+                vars.angle = (obj.angle || 0) + 360;
                 gsap.to(obj, vars);
                 break;
         }
