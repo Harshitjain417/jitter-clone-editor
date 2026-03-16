@@ -1,0 +1,61 @@
+:root {
+  /* Dark Premium Theme Colors */
+  --bg-dark: #09090b; /* Deeper zinc */
+  --bg-panel: #18181b;
+  --bg-surface: #27272a;
+  --bg-hover: #3f3f46;
+  
+  --accent-primary: #8b5cf6; /* Vibrant Purple */
+  --accent-hover: #7c3aed;
+  --accent-glow: rgba(139, 92, 246, 0.4);
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(99, 102, 241, 0.5);
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3);
+  
+  /* Dimensions */
+  --toolbar-height: 56px;
+  --sidebar-left-w: 260px;
+  --sidebar-right-w: 280px;
+  --timeline-h: 220px;
+  
+  /* Animation */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  overflow: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

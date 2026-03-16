@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jitter.video Clone - Motion Design Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/index.css">
+    <link rel="stylesheet" href="/src/styles/layout.css">
+    <link rel="stylesheet" href="/src/styles/components.css">
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Top Toolbar -->
+      <header class="toolbar">
+        <div class="toolbar-brand">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <div class="logo">✨ Workspace</div>
+          </div>
+        </div>
+        <div class="toolbar-tools">
+          <button class="tool-btn active" id="btn-select" title="Select (V)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+          <div class="divider"></div>
+          <button class="tool-btn" id="btn-rect" title="Rectangle (R)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button>
+          <button class="tool-btn" id="btn-circle" title="Circle (O)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></button>
+          <button class="tool-btn" id="btn-text" title="Text (T)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></button>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-primary" id="btn-export">Export</button>
+        </div>
+      </header>
+
+      <div class="main-workspace">
+        <!-- Left Sidebar (Layers & Properties) -->
+        <aside class="sidebar-left">
+          <div class="panel">
+            <div class="panel-header">Layers</div>
+            <div class="panel-content layer-list" id="layer-list">
+              <!-- Layers generated here -->
+              <div class="empty-state">No objects on canvas</div>
+            </div>
+          </div>
+          
+          <div class="panel">
+            <div class="panel-header">Properties</div>
+            <div class="panel-content property-panel" id="property-panel">
+              <div class="empty-state">Select an object to edit properties</div>
+              
+              <!-- Property controls (hidden by default) -->
+              <div id="properties-content" style="display: none;">
+                <div class="prop-group">
+                  <label>Color</label>
+                  <input type="color" id="prop-fill" value="#000000">
+                </div>
+                <!-- More properties will be added dynamically -->
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Center Canvas Area -->
+        <main class="canvas-container" id="canvas-container">
+          <div class="canvas-wrapper">
+            <canvas id="main-canvas"></canvas>
+          </div>
+        </main>
+        
+        <!-- Right Sidebar (Animation Presets) -->
+        <aside class="sidebar-right">
+          <div class="panel">
+            <div class="panel-header">Animations</div>
+            <div class="panel-content animations-list">
+              <div class="empty-state" id="anim-empty-state">Select an object to animate</div>
+              
+              <div id="anim-controls" style="display: none;">
+                <h4 class="section-title">In</h4>
+                <div class="preset-grid">
+                  <button class="preset-btn" data-anim="fade-in">Fade In</button>
+                  <button class="preset-btn" data-anim="slide-in">Slide Up</button>
+                  <button class="preset-btn" data-anim="scale-in">Scale In</button>
+                </div>
+                
+                <h4 class="section-title">Out</h4>
+                <div class="preset-grid">
+                  <button class="preset-btn" data-anim="fade-out">Fade Out</button>
+                  <button class="preset-btn" data-anim="slide-out">Slide Down</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Bottom Timeline Area -->
+      <footer class="timeline-container">
+        <div class="timeline-header">
+          <div class="timeline-controls">
+            <button class="play-btn" id="btn-play">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <span class="time-display">00:00:00</span>
+          </div>
+        </div>
+        <div class="timeline-tracks" id="timeline-tracks">
+          <!-- Timeline tracks generated here -->
+          <div class="playhead" id="playhead"></div>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
