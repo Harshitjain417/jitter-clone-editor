@@ -110,24 +110,103 @@ export class UIManager {
         // Alignment Buttons
         document.getElementById('btn-align-c')?.addEventListener('click', () => {
             const objs = this.canvasManager.canvas.getActiveObjects();
-            objs.forEach(obj => this.canvasManager.canvas.centerObject(obj));
+            objs.forEach(obj => {
+                this.canvasManager.canvas.centerObject(obj);
+                obj.setCoords(); // Fix selection box
+            });
             this.canvasManager.canvas.requestRenderAll();
             this.canvasManager.saveHistory();
         });
         
         document.getElementById('btn-align-h')?.addEventListener('click', () => {
             const objs = this.canvasManager.canvas.getActiveObjects();
-            objs.forEach(obj => this.canvasManager.canvas.centerObjectH(obj));
+            objs.forEach(obj => {
+                this.canvasManager.canvas.centerObjectH(obj);
+                obj.setCoords();
+            });
             this.canvasManager.canvas.requestRenderAll();
             this.canvasManager.saveHistory();
         });
         
         document.getElementById('btn-align-v')?.addEventListener('click', () => {
             const objs = this.canvasManager.canvas.getActiveObjects();
-            objs.forEach(obj => this.canvasManager.canvas.centerObjectV(obj));
+            objs.forEach(obj => {
+                this.canvasManager.canvas.centerObjectV(obj);
+                obj.setCoords();
+            });
             this.canvasManager.canvas.requestRenderAll();
             this.canvasManager.saveHistory();
         });
+        
+        // Image Import
+        document.getElementById('btn-image')?.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (f) => {
+                    fabric.Image.fromURL(f.target.result, (img) => {
+                        img.set({
+                            left: this.canvasManager.canvas.width / 2,
+                            top: this.canvasManager.canvas.height / 2,
+                            originX: 'center',
+                            originY: 'center',
+                            id: `obj-${this.canvasManager.objectCounter++}`,
+                            name: `Image ${this.canvasManager.objectCounter}`
+                        });
+                        const maxDim = 300; // Resize if huge
+                        if (img.width > maxDim || img.height > maxDim) {
+                            const scale = Math.min(maxDim / img.width, maxDim / img.height);
+                            img.scale(scale);
+                        }
+                        this.canvasManager.canvas.add(img);
+                        this.canvasManager.canvas.setActiveObject(img);
+                        this.canvasManager.dispatchCanvasChange();
+                        this.selectTool('select');
+                        this.canvasManager.saveHistory();
+                    });
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        });
+        
+        // Shadow Toggle logic
+        const shadowToggle = document.getElementById('prop-shadow-toggle');
+        const shadowGroup = document.getElementById('group-shadow-settings');
+        const shadowBlur = document.getElementById('prop-shadow-blur');
+        const shadowOffset = document.getElementById('prop-shadow-offset');
+        
+        const updateShadow = () => {
+            const objs = this.canvasManager.canvas.getActiveObjects();
+            if (!objs.length) return;
+            
+            if (shadowToggle.checked) {
+                shadowGroup.style.display = 'block';
+                const blur = parseInt(shadowBlur.value);
+                const offset = parseInt(shadowOffset.value);
+                objs.forEach(obj => {
+                    obj.set('shadow', new fabric.Shadow({
+                        color: 'rgba(0,0,0,0.5)',
+                        blur: blur,
+                        offsetX: offset,
+                        offsetY: offset
+                    }));
+                });
+            } else {
+                shadowGroup.style.display = 'none';
+                objs.forEach(obj => obj.set('shadow', null));
+            }
+            this.canvasManager.canvas.requestRenderAll();
+            this.canvasManager.saveHistory();
+        };
+
+        if (shadowToggle) shadowToggle.addEventListener('change', updateShadow);
+        if (shadowBlur) shadowBlur.addEventListener('input', updateShadow);
+        if (shadowOffset) shadowOffset.addEventListener('input', updateShadow);
     }
     
     updatePropertiesPanel(activeObjects) {
@@ -137,6 +216,10 @@ export class UIManager {
         const scaleSlider = document.getElementById('prop-scale');
         const fontGroup = document.getElementById('group-font');
         const fontSelect = document.getElementById('prop-font');
+        const shadowToggle = document.getElementById('prop-shadow-toggle');
+        const shadowGroup = document.getElementById('group-shadow-settings');
+        const shadowBlur = document.getElementById('prop-shadow-blur');
+        const shadowOffset = document.getElementById('prop-shadow-offset');
         
         if (!activeObjects || activeObjects.length === 0) {
             emptyState.style.display = 'block';
@@ -166,6 +249,19 @@ export class UIManager {
                     }
                 } else {
                     fontGroup.style.display = 'none';
+                }
+            }
+            
+            // Sync Shadow Toggles
+            if (shadowToggle && shadowGroup) {
+                if (obj.shadow) {
+                    shadowToggle.checked = true;
+                    shadowGroup.style.display = 'block';
+                    if (shadowBlur) shadowBlur.value = obj.shadow.blur || 10;
+                    if (shadowOffset) shadowOffset.value = obj.shadow.offsetX || 5;
+                } else {
+                    shadowToggle.checked = false;
+                    shadowGroup.style.display = 'none';
                 }
             }
         }
@@ -262,67 +358,44 @@ export class UIManager {
         // Default target properties
         let vars = { duration: duration, ease: "power2.out", onUpdate: () => this.canvasManager.canvas.requestRenderAll() };
         
-        // Reset properties before from-animations
-        
+        // Using fromTo allows us to maintain the real base state natively,
+        // so clicking play again reloops cleanly without leaving permanent GSAP artifacts.
         switch(type) {
             case 'fade-in':
-                obj.set({ opacity: 0 });
-                vars.opacity = 1;
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { opacity: 0 }, { opacity: 1, ...vars });
                 break;
             case 'slide-in':
                 const originalY = obj.top;
-                obj.set({ opacity: 0, top: originalY + 100 });
-                vars.opacity = 1;
-                vars.top = originalY;
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { opacity: 0, top: originalY + 100 }, { opacity: 1, top: originalY, ...vars });
                 break;
             case 'scale-in':
-                const origScaleX = obj.scaleX;
-                const origScaleY = obj.scaleY;
-                obj.set({ scaleX: 0, scaleY: 0, opacity: 0 });
-                vars.scaleX = origScaleX;
-                vars.scaleY = origScaleY;
-                vars.opacity = 1;
+                const origScaleX = obj.scaleX || 1;
+                const origScaleY = obj.scaleY || 1;
                 vars.ease = "back.out(1.7)";
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { scaleX: 0, scaleY: 0, opacity: 0 }, { scaleX: origScaleX, scaleY: origScaleY, opacity: 1, ...vars });
                 break;
             case 'fade-out':
-                vars.opacity = 0;
-                // Add a small delay for out animations
-                vars.delay = 3;
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { opacity: 1 }, { opacity: 0, delay: 3, ...vars });
                 break;
             case 'slide-out':
-                vars.top = obj.top + 100;
-                vars.opacity = 0;
-                vars.delay = 3;
-                gsap.to(obj, vars);
+                const origYOut = obj.top;
+                gsap.fromTo(obj, { top: origYOut, opacity: 1 }, { top: origYOut + 100, opacity: 0, delay: 3, ...vars });
                 break;
             case 'pulse':
                 const currentScale = obj.scaleX || 1;
-                vars.scaleX = currentScale * 1.2;
-                vars.scaleY = currentScale * 1.2;
                 vars.yoyo = true;
                 vars.repeat = 3;
                 vars.ease = "power1.inOut";
-                // Add a completion callback to reset
-                vars.onComplete = () => {
-                    obj.set({ scaleX: currentScale, scaleY: currentScale });
-                    this.canvasManager.canvas.requestRenderAll();
-                };
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { scaleX: currentScale, scaleY: currentScale }, { scaleX: currentScale * 1.2, scaleY: currentScale * 1.2, ...vars });
                 break;
             case 'bounce':
                 const originalTop = obj.top;
-                obj.set({ top: originalTop - 150 });
-                vars.top = originalTop;
                 vars.ease = "bounce.out";
-                gsap.to(obj, vars);
+                gsap.fromTo(obj, { top: originalTop - 150 }, { top: originalTop, ...vars });
                 break;
             case 'rotate':
-                vars.angle = (obj.angle || 0) + 360;
-                gsap.to(obj, vars);
+                const origAngle = obj.angle || 0;
+                gsap.fromTo(obj, { angle: origAngle }, { angle: origAngle + 360, ...vars });
                 break;
         }
     }

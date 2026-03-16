@@ -7,7 +7,7 @@
     <title>Jitter.video Clone - Motion Design Tool</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/src/styles/index.css">
     <link rel="stylesheet" href="/src/styles/layout.css">
     <link rel="stylesheet" href="/src/styles/components.css">
@@ -31,6 +31,8 @@
           <button class="tool-btn" id="btn-rect" title="Rectangle (R)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button>
           <button class="tool-btn" id="btn-circle" title="Circle (O)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></button>
           <button class="tool-btn" id="btn-text" title="Text (T)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg></button>
+          <div class="divider"></div>
+          <button class="tool-btn" id="btn-image" title="Insert Image"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
         </div>
         <div class="toolbar-actions">
           <button class="btn btn-primary" id="btn-export">Export</button>
@@ -76,10 +78,28 @@
                   <label>Font</label>
                   <select id="prop-font" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-light); padding: 4px; border-radius: 4px; width: 100px;">
                     <option value="Inter">Inter</option>
+                    <option value="Poppins">Poppins</option>
                     <option value="Arial">Arial</option>
                     <option value="Times New Roman">Times</option>
                     <option value="Courier New">Courier</option>
                   </select>
+                </div>
+                
+                <hr style="border-color: var(--border-light); margin: 12px 0;">
+                
+                <div class="prop-group">
+                  <label>Shadow</label>
+                  <input type="checkbox" id="prop-shadow-toggle">
+                </div>
+                <div id="group-shadow-settings" style="display: none; padding-left: 10px;">
+                  <div class="prop-group mt-2">
+                    <label>Blur</label>
+                    <input type="range" id="prop-shadow-blur" min="0" max="50" step="1" value="10" style="width: 80px;">
+                  </div>
+                  <div class="prop-group mt-2">
+                    <label>Offset</label>
+                    <input type="range" id="prop-shadow-offset" min="-20" max="20" step="1" value="5" style="width: 80px;">
+                  </div>
                 </div>
               </div>
             </div>
@@ -130,6 +150,11 @@
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             </button>
             <span class="time-display">00:00:00</span>
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 0.8rem;">
+              <label>Duration:</label>
+              <input type="number" id="timeline-duration" min="4" max="20" value="5" style="width: 40px; background: var(--bg-dark); color: white; border: 1px solid var(--border-light); border-radius: 4px; padding: 2px;">
+              <span>s</span>
+            </div>
           </div>
         </div>
         <div class="timeline-tracks" id="timeline-tracks">

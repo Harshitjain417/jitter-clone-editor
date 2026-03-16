@@ -26,6 +26,19 @@ export class TimelineManager {
         document.addEventListener('canvas:update', (e) => {
             this.renderTracks();
         });
+        
+        // Handle duration change
+        const durationInput = document.getElementById('timeline-duration');
+        if (durationInput) {
+            durationInput.addEventListener('change', (e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val) || val < 4) val = 4;
+                if (val > 20) val = 20;
+                e.target.value = val;
+                this.duration = val;
+                if (!this.isPlaying) this.updatePlayhead();
+            });
+        }
     }
     
     togglePlay() {
