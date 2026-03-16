@@ -65,7 +65,13 @@ export class TimelineManager {
             this.currentTime = 0;
             this.masterTimeline.time(0);
         }
-        this.masterTimeline.play();
+        
+        if (this.currentTime === 0) {
+            this.masterTimeline.restart();
+        } else {
+            this.masterTimeline.play();
+        }
+        
         this.updatePlayhead();
     }
     
@@ -155,6 +161,15 @@ export class TimelineManager {
                      block.style.border = '1px solid var(--accent-primary)';
                      block.style.borderRadius = '4px';
                      block.title = `${anim.type}`;
+                     block.style.display = 'flex';
+                     block.style.alignItems = 'center';
+                     block.style.paddingLeft = '4px';
+                     block.style.color = 'white';
+                     block.style.fontSize = '0.6rem';
+                     block.style.textTransform = 'capitalize';
+                     block.style.overflow = 'hidden';
+                     block.style.whiteSpace = 'nowrap';
+                     block.textContent = anim.type.replace('-', ' ');
                      
                      track.appendChild(block);
                  });

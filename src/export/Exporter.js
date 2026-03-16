@@ -19,6 +19,17 @@ export class Exporter {
         document.getElementById('btn-start-export')?.addEventListener('click', () => {
              this.exportVideo();
         });
+        
+        const qualitySelect = document.getElementById('export-quality');
+        if (qualitySelect) {
+            qualitySelect.addEventListener('change', (e) => {
+                const val = parseInt(e.target.value);
+                if (val > 720) {
+                    alert('👑 PRO Subscription required to export in HD/2K/4K! Please upgrade to unlock high-resolution rendering.');
+                    e.target.value = '720';
+                }
+            });
+        }
     }
     
     showModal() {
@@ -43,6 +54,26 @@ export class Exporter {
     exportVideo() {
         const canvas = document.getElementById('main-canvas');
         if (!canvas) return;
+        
+        // Quality Handling
+        const qualitySelect = document.getElementById('export-quality');
+        const targetHeight = qualitySelect ? parseInt(qualitySelect.value) : 720;
+        
+        // Editor is ~ 800x450 by default aspect ratio. 
+        // Calculate the scale multiplier to hit the target render resolution
+        const baseHeight = this.canvasManager.canvas.getHeight();
+        const baseWidth = this.canvasManager.canvas.getWidth();
+        const scaleMultiplier = targetHeight / baseHeight;
+        
+        // Scale Fabric Canvas Up for Render
+        if (scaleMultiplier !== 1) {
+            this.canvasManager.canvas.setDimensions({
+                width: baseWidth * scaleMultiplier,
+                height: baseHeight * scaleMultiplier
+            });
+            this.canvasManager.canvas.setZoom(scaleMultiplier);
+            this.canvasManager.canvas.requestRenderAll();
+        }
         
         const formatSelect = document.getElementById('export-format');
         const format = formatSelect ? formatSelect.value : 'webm';
@@ -85,7 +116,7 @@ export class Exporter {
             
             const a = document.createElement('a');
             a.href = url;
-            a.download = `jitter-clone-${Date.now()}.${extension}`;
+            a.download = `editarmorai-${Date.now()}.${extension}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -94,6 +125,17 @@ export class Exporter {
             clearInterval(this.exportInterval);
             document.getElementById('btn-start-export').disabled = false;
             document.getElementById('btn-close-modal').disabled = false;
+            
+            // Revert Canvas Scale
+            if (scaleMultiplier !== 1) {
+                this.canvasManager.canvas.setDimensions({
+                    width: baseWidth,
+                    height: baseHeight
+                });
+                this.canvasManager.canvas.setZoom(1);
+                this.canvasManager.canvas.requestRenderAll();
+            }
+            
             this.hideModal();
         };
         

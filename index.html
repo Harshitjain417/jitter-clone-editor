@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jitter.video Clone - Motion Design Tool</title>
+    <title>Editarmorai - Motion Design Tool</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         <div class="toolbar-brand">
           <div style="display: flex; align-items: center; gap: 8px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            <div class="logo">✨ Workspace</div>
+            <div class="logo">✨ Editarmorai</div>
           </div>
         </div>
         <div class="toolbar-tools">
@@ -180,9 +180,19 @@
           </div>
           <div class="modal-body">
             <div class="prop-group">
+              <label>Quality</label>
+              <select id="export-quality" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-light); padding: 8px; border-radius: 4px; width: 150px;">
+                <option value="720">720p (Free)</option>
+                <option value="1080">1080p HD 👑</option>
+                <option value="1440">2K QHD 👑</option>
+                <option value="2160">4K UHD 👑</option>
+              </select>
+            </div>
+            
+            <div class="prop-group">
               <label>Format</label>
               <select id="export-format" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border-light); padding: 8px; border-radius: 4px; width: 150px;">
-                <option value="mp4">MP4 Video (H.264)</option>
+                <option value="mp4">MP4 Video</option>
                 <option value="webm">WebM Video</option>
               </select>
             </div>
