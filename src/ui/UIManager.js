@@ -28,9 +28,13 @@ export class UIManager {
                 const currentBtn = e.currentTarget;
                 currentBtn.classList.add('active');
                 
-                // Determine tool name from id (btn-select -> select)
-                const toolName = currentBtn.id.replace('btn-', '');
-                this.canvasManager.setTool(toolName);
+                // Determine tool name from id (e.g. btn-rect -> rect)
+                // Use closest('.tool-btn') to ensure we get the button's ID even if the inner SVG is clicked
+                const btnElement = e.target.closest('.tool-btn');
+                if (btnElement) {
+                    const toolName = btnElement.id.replace('btn-', '');
+                    this.canvasManager.setTool(toolName);
+                }
             });
         });
     }
