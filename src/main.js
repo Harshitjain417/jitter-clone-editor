@@ -59,6 +59,20 @@ class App {
             case 't':
                 this.uiManager.selectTool('text');
                 break;
+            case ' ':
+                e.preventDefault(); // Prevent page scroll
+                this.timelineManager.togglePlay();
+                break;
+            case 'z':
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        this.canvasManager.redo();
+                    } else {
+                        this.canvasManager.undo();
+                    }
+                }
+                break;
         }
     }
 }

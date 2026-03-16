@@ -21,6 +21,11 @@ export class CanvasManager {
         
         this.currentTool = 'select'; // Default tool
         this.objectCounter = 1;
+
+        // Undo/Redo State
+        this.history = [];
+        this.historyIndex = -1;
+        this.isHistoryProcessing = false;
         
         // Listeners for selection updates
         this.canvas.on('selection:created', this.handleSelectionChange.bind(this));
@@ -30,8 +35,16 @@ export class CanvasManager {
         // Listeners for canvas clicking (tool handling)
         this.canvas.on('mouse:down', this.handleMouseDown.bind(this));
         
+        // Listeners for history changes
+        this.canvas.on('object:added', () => this.saveHistory());
+        this.canvas.on('object:modified', () => this.saveHistory());
+        this.canvas.on('object:removed', () => this.saveHistory());
+
         window.addEventListener('resize', this.resize.bind(this));
         this.resize(); // Initial resize to fit viewport
+        
+        // Save initial blank state
+        setTimeout(() => this.saveHistory(), 100);
     }
     
     setTool(tool) {
@@ -148,8 +161,48 @@ export class CanvasManager {
         const scaleY = containerHeight / canvasHeight;
         const scaleToFit = Math.min(scaleX, scaleY, 1.5);
         
-        // Apply CSS transform to scale the wrapper
         wrapper.style.transform = `scale(${scaleToFit})`;
         // The actual fabric canvas dimensions remain 800x450
+    }
+
+    saveHistory() {
+        if (this.isHistoryProcessing) return;
+        
+        // Truncate redo history if we make a new action
+        if (this.historyIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.historyIndex + 1);
+        }
+        
+        const json = JSON.stringify(this.canvas.toJSON(['id', 'name', 'animations']));
+        
+        // Prevent duplicate consecutive states
+        if (this.history.length > 0 && this.history[this.historyIndex] === json) return;
+        
+        this.history.push(json);
+        this.historyIndex++;
+    }
+    
+    undo() {
+        if (this.historyIndex > 0) {
+            this.isHistoryProcessing = true;
+            this.historyIndex--;
+            this.canvas.loadFromJSON(this.history[this.historyIndex], () => {
+                this.canvas.renderAll();
+                this.isHistoryProcessing = false;
+                this.dispatchCanvasChange();
+            });
+        }
+    }
+    
+    redo() {
+        if (this.historyIndex < this.history.length - 1) {
+            this.isHistoryProcessing = true;
+            this.historyIndex++;
+            this.canvas.loadFromJSON(this.history[this.historyIndex], () => {
+                this.canvas.renderAll();
+                this.isHistoryProcessing = false;
+                this.dispatchCanvasChange();
+            });
+        }
     }
 }
