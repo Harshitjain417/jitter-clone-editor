@@ -190,6 +190,7 @@ export class CanvasManager {
         container.style.top = '-9999px';
         document.body.appendChild(container);
 
+        console.log('CanvasManager: addLottieAnimation from', url);
         // Load the lottie animation
         const anim = lottie.loadAnimation({
             container: container,
@@ -199,7 +200,12 @@ export class CanvasManager {
             path: url
         });
 
+        anim.addEventListener('error', (err) => {
+            console.error('Lottie Load Error:', err, 'for URL:', url);
+        });
+
         anim.addEventListener('DOMLoaded', () => {
+            console.log('Lottie DOMLoaded:', url);
             // Wait a small tick for the canvas to be created and sized
             setTimeout(() => {
                 const lottieCanvas = container.querySelector('canvas');

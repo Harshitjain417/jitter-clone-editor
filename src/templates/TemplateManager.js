@@ -19,7 +19,7 @@ export class TemplateManager {
                 id: 'ai-calling',
                 title: 'AI Calling Animation',
                 type: 'lottie',
-                url: '/src/assets/templates/ai_calling.json',
+                url: 'src/assets/templates/ai_calling.json',
                 thumbnailText: 'AI Calling'
             },
             {
@@ -86,6 +86,7 @@ export class TemplateManager {
     }
 
     loadTemplate(template) {
+        console.log('Loading template:', template.title, 'from URL:', template.url);
         this.closeModal();
 
         if (template.type === 'lottie') {
