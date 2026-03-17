@@ -215,6 +215,12 @@ export class CanvasManager {
                     name: 'Lottie Animation'
                 });
 
+                // Scale to fit canvas if larger
+                const scaleX = (this.canvas.width * 0.8) / lottieCanvas.width;
+                const scaleY = (this.canvas.height * 0.8) / lottieCanvas.height;
+                const scale = Math.min(scaleX, scaleY, 1);
+                fabricImg.scale(scale);
+
                 // Attach references for cleanup
                 fabricImg.lottieAnim = anim;
                 fabricImg.lottieContainer = container;

@@ -16,6 +16,13 @@ export class TemplateManager {
         // We simulate a Lottie AE template. The path can be replaced by user's actual JSON file.
         this.templates = [
             {
+                id: 'ai-calling',
+                title: 'AI Calling Animation',
+                type: 'lottie',
+                url: '/src/assets/templates/ai_calling.json',
+                thumbnailText: 'AI Calling'
+            },
+            {
                 id: 'ae-sample-1',
                 title: 'After Effects Logo Reveal',
                 type: 'lottie',
