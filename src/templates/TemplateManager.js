@@ -19,14 +19,14 @@ export class TemplateManager {
                 id: 'ai-calling',
                 title: 'AI Calling Animation',
                 type: 'lottie',
-                url: 'src/assets/templates/ai_calling.json',
+                url: `${import.meta.env.BASE_URL}templates/ai_calling.json`,
                 thumbnailText: 'AI Calling'
             },
             {
                 id: 'ae-sample-1',
                 title: 'After Effects Logo Reveal',
                 type: 'lottie',
-                url: 'https://assets2.lottiefiles.com/packages/lf20_U1KDBH.json', // Dummy lottie url
+                url: 'https://lottie.host/4db68bbd-31f6-4cd8-84eb-189571b89621/21RFVlnJSF.json',
                 thumbnailText: 'AE Lottie'
             },
             {
