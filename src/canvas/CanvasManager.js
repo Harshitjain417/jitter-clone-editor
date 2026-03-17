@@ -145,6 +145,103 @@ export class CanvasManager {
         document.dispatchEvent(event);
     }
     
+    addRect() {
+        const newObj = new fabric.Rect({
+            left: this.canvas.width / 2,
+            top: this.canvas.height / 2,
+            fill: '#6366f1',
+            originX: 'center',
+            originY: 'center',
+            id: `obj-${this.objectCounter++}`,
+            name: `Rect ${this.objectCounter}`,
+            width: 100,
+            height: 100,
+            rx: 8,
+            ry: 8
+        });
+        this.canvas.add(newObj);
+        this.canvas.setActiveObject(newObj);
+        this.dispatchCanvasChange();
+    }
+
+    addCircle() {
+        const newObj = new fabric.Circle({
+            left: this.canvas.width / 2,
+            top: this.canvas.height / 2,
+            fill: '#ec4899',
+            originX: 'center',
+            originY: 'center',
+            id: `obj-${this.objectCounter++}`,
+            name: `Circle ${this.objectCounter}`,
+            radius: 50
+        });
+        this.canvas.add(newObj);
+        this.canvas.setActiveObject(newObj);
+        this.dispatchCanvasChange();
+    }
+
+    addLottieAnimation(url) {
+        // Create an offscreen container for Lottie's canvas renderer
+        const container = document.createElement('div');
+        container.style.width = '400px';
+        container.style.height = '400px';
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '-9999px';
+        document.body.appendChild(container);
+
+        // Load the lottie animation
+        const anim = lottie.loadAnimation({
+            container: container,
+            renderer: 'canvas', // Use canvas renderer to work with Fabric.js
+            loop: true,
+            autoplay: true,
+            path: url
+        });
+
+        anim.addEventListener('DOMLoaded', () => {
+            // Wait a small tick for the canvas to be created and sized
+            setTimeout(() => {
+                const lottieCanvas = container.querySelector('canvas');
+                if (!lottieCanvas) return;
+
+                // Create a fabric image holding the lottie canvas
+                const fabricImg = new fabric.Image(lottieCanvas, {
+                    left: this.canvas.width / 2,
+                    top: this.canvas.height / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    id: `obj-${this.objectCounter++}`,
+                    name: 'Lottie Animation'
+                });
+
+                // Attach references for cleanup
+                fabricImg.lottieAnim = anim;
+                fabricImg.lottieContainer = container;
+
+                this.canvas.add(fabricImg);
+                this.canvas.setActiveObject(fabricImg);
+                this.dispatchCanvasChange();
+
+                // Continuously update the fabric image when Lottie renders a new frame
+                const updateTicker = () => {
+                    if (this.canvas.contains(fabricImg)) {
+                        fabricImg.dirty = true;
+                        this.canvas.requestRenderAll();
+                    } else {
+                        // Cleanup if the object was deleted from canvas
+                        anim.destroy();
+                        if (container.parentNode) {
+                            container.parentNode.removeChild(container);
+                        }
+                        gsap.ticker.remove(updateTicker);
+                    }
+                };
+                gsap.ticker.add(updateTicker);
+            }, 50);
+        });
+    }
+    
     deleteSelected() {
         const activeObjects = this.canvas.getActiveObjects();
         if (activeObjects.length) {

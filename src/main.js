@@ -5,6 +5,7 @@ import { CanvasManager } from './canvas/CanvasManager.js';
 import { TimelineManager } from './timeline/Timeline.js';
 import { UIManager } from './ui/UIManager.js';
 import { Exporter } from './export/Exporter.js';
+import { TemplateManager } from './templates/TemplateManager.js';
 
 class App {
     constructor() {
@@ -12,6 +13,7 @@ class App {
         this.timelineManager = null;
         this.uiManager = null;
         this.exporter = null;
+        this.templateManager = null;
     }
 
     init() {
@@ -22,6 +24,7 @@ class App {
         this.timelineManager = new TimelineManager(this.canvasManager);
         this.uiManager = new UIManager(this.canvasManager, this.timelineManager);
         this.exporter = new Exporter(this.canvasManager, this.timelineManager);
+        this.templateManager = new TemplateManager(this.canvasManager, this.timelineManager);
         
         // Setup Resize handling
         window.addEventListener('resize', this.handleResize.bind(this));
